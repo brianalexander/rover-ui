@@ -91,12 +91,12 @@ class AntennaSignal extends Component {
 
         series: [
           {
-            zoneAxis: "y",
-            zones: [
-              { value: 5, color: "red" },
-              { value: 15, color: "orange" },
-              { color: "green" }
-            ],
+            // zoneAxis: "y",
+            // zones: [
+            //   { value: 5, color: "red" },
+            //   { value: 15, color: "orange" },
+            //   { color: "green" }
+            // ],
             name: "Random data",
             data: []
           }
