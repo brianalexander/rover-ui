@@ -3,7 +3,9 @@ import ReactDOM from "react-dom";
 import { Route, Link, Switch, BrowserRouter as Router } from "react-router-dom";
 import "./index.css";
 import App from "./App";
-import Science from "./Science.js";
+import Science from "./Science";
+import Extreme from "./Extreme";
+import Autonomous from "./Autonomous";
 import * as serviceWorker from "./serviceWorker";
 
 const routing = (
@@ -14,6 +16,12 @@ const routing = (
       </Route>
       <Route path="/science">
         <Science />
+      </Route>
+      <Route path="/extreme">
+        <Extreme />
+      </Route>
+      <Route path="/autonomous">
+        <Autonomous />
       </Route>
     </Switch>
   </Router>
