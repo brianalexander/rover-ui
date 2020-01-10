@@ -7,47 +7,60 @@ import { toast } from "react-toastify";
 DarkUnica(Highcharts);
 
 class MobilityCurrentDraw extends Component {
-  POOR_SIGNAL_ID = "poor-signal-id";
+  componentWillReceiveProps() {
+    this.setState({
+      chartOptions: {
+        series: [
+          {
+            data: this.props.ampsA
+          },
+          {
+            data: this.props.ampsB
+          }
+        ]
+      }
+    });
+  }
 
   componentDidMount() {
-    setInterval(() => {
-      let prevDataA = this.state.chartOptions.series[0].data;
-      let prevDataB = this.state.chartOptions.series[1].data;
+    // setInterval(() => {
+    //   let prevDataA = this.state.chartOptions.series[0].data;
+    //   let prevDataB = this.state.chartOptions.series[1].data;
 
-      if (prevDataA.length > 5) {
-        prevDataA.shift();
-      }
+    //   if (prevDataA.length > 5) {
+    //     prevDataA.shift();
+    //   }
 
-      if (prevDataB.length > 5) {
-        prevDataB.shift();
-      }
+    //   if (prevDataB.length > 5) {
+    //     prevDataB.shift();
+    //   }
 
-      prevDataA.push([new Date().getTime(), Math.random() * 20]);
-      prevDataB.push([new Date().getTime(), Math.random() * 20]);
+    //   prevDataA.push([new Date().getTime(), Math.random() * 20]);
+    //   prevDataB.push([new Date().getTime(), Math.random() * 20]);
 
-      // if (
-      //   prevDataA[prevDataA.length - 1][1] < 5 &&
-      //   !toast.isActive(this.POOR_SIGNAL_ID)
-      // ) {
-      //   toast.error("Signal Strength Critical!", {
-      //     position: toast.POSITION.BOTTOM_RIGHT,
-      //     toastId: this.POOR_SIGNAL_ID
-      //   });
-      // }
+    //   // if (
+    //   //   prevDataA[prevDataA.length - 1][1] < 5 &&
+    //   //   !toast.isActive(this.POOR_SIGNAL_ID)
+    //   // ) {
+    //   //   toast.error("Signal Strength Critical!", {
+    //   //     position: toast.POSITION.BOTTOM_RIGHT,
+    //   //     toastId: this.POOR_SIGNAL_ID
+    //   //   });
+    //   // }
 
-      this.setState({
-        chartOptions: {
-          series: [
-            {
-              data: [...prevDataA]
-            },
-            {
-              data: [...prevDataB]
-            }
-          ]
-        }
-      });
-    }, 1000);
+    //   this.setState({
+    //     chartOptions: {
+    //       series: [
+    //         {
+    //           data: [...prevDataA]
+    //         },
+    //         {
+    //           data: [...prevDataB]
+    //         }
+    //       ]
+    //     }
+    //   });
+    // }, 1000);
   }
 
   constructor(props) {
@@ -74,7 +87,7 @@ class MobilityCurrentDraw extends Component {
 
         yAxis: {
           min: 0,
-          max: 20,
+          max: 80,
           title: {
             text: "Value"
           },
