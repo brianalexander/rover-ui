@@ -22,30 +22,37 @@ import MobilityCurrentDraw from "./components/MobilityCurrentDraw";
 import ROSLIB from "roslib";
 
 class App extends Component {
+  THROTTLE_RATE = 1000;
+  QUEUE_LENGTH = 1;
+
+  POOR_SIGNAL_ID = "poor-signal-id";
+  HIGH_CURRENT_ID = "high-current-id";
+
   constructor(props) {
     super(props);
+    console.log("CONSTRUCTOR CALLED");
 
     this.state = {
       imu: {
-        rotation: null,
+        rotation: { x: 0, y: 0, z: 0 },
+        position: { x: 0, y: 0, z: 0 },
         heading: null
       },
       gps: {
         currentPosition: [null, null]
       },
       antenna: {
-        decibals: null
+        decibels: []
       },
       ultrasonic: {
         distance: null
       },
-
       roboclaw: {
         a: {
-          amps: null
+          amps: []
         },
         b: {
-          amps: null
+          amps: []
         }
       }
     };
@@ -77,14 +84,28 @@ class App extends Component {
     // Register listener callbacks
     if (this.antenna_listener) {
       this.antenna_listener.subscribe(m => {
+        let prevData = [...this.state.antenna.decibels];
+        if (prevData.length >= 5) {
+          prevData.shift();
+        }
+        if (m.signal_strength < 10) {
+          toast.error("SIGNAL STRENGTH CRITICAL!", {
+            position: toast.POSITION.BOTTOM_RIGHT,
+            toastId: this.POOR_SIGNAL_ID
+          });
+        }
+        prevData.push([new Date().getTime(), m.signal_strength]);
         this.setState({
-          decibels: m.signal_strength
+          antenna: {
+            decibels: prevData
+          }
         });
       });
     }
 
     if (this.gps_listener) {
       this.gps_listener.subscribe(m => {
+        console.log(m);
         this.setState({
           latitude: m.roverLat,
           longitude: m.roverLon
@@ -94,18 +115,51 @@ class App extends Component {
 
     if (this.imu_listener) {
       this.imu_listener.subscribe(m => {
+        let x = Math.cos(m.yaw) * Math.cos(m.pitch);
+        let y = Math.sin(m.yaw) * Math.cos(m.pitch);
+        let z = Math.sin(m.pitch);
+        // console.log(m);
+        console.log(x, y, z);
         this.setState({
-          yaw: m.yaw,
-          pitch: m.pitch,
-          roll: m.roll
+          imu: {
+            rotation: {
+              x: x,
+              y: y,
+              z: z
+            }
+          }
         });
       });
     }
 
     if (this.mobility_listener) {
       this.mobility_listener.subscribe(m => {
+        let prevDataA = [...this.state.roboclaw.a.amps];
+        let prevDataB = [...this.state.roboclaw.b.amps];
+        if (prevDataA.length >= 5) {
+          prevDataA.shift();
+        }
+
+        prevDataA.push([new Date().getTime(), m.current_draw]);
+
+        if (prevDataB.length >= 5) {
+          prevDataB.shift();
+        }
+
+        prevDataB.push([new Date().getTime(), Math.max(m.current_draw - 5, 0)]);
+
+        if (m.current_draw > 70) {
+          toast.warn("CURRENT DRAW HIGH!", {
+            position: toast.POSITION.BOTTOM_RIGHT,
+            toastId: this.HIGH_CURRENT_ID
+          });
+        }
+
         this.setState({
-          amperage: m.current_draw
+          roboclaw: {
+            a: { amps: prevDataA },
+            b: { amps: prevDataB }
+          }
         });
       });
     }
@@ -140,31 +194,43 @@ class App extends Component {
       this.antenna_listener = new ROSLIB.Topic({
         ros: this.ros,
         name: "/antenna",
-        messageType: "fake_sensor_test/antenna"
+        messageType: "fake_sensor_test/antenna",
+        throttle_rate: this.THROTTLE_RATE,
+        queue_length: this.QUEUE_LENGTH
       });
 
       this.gps_listener = new ROSLIB.Topic({
         ros: this.ros,
         name: "/gnss",
-        messageType: "gnss/gps"
+        messageType: "fake_sensor_test/gps",
+        throttle_rate: this.THROTTLE_RATE,
+        queue_length: this.QUEUE_LENGTH
       });
+
+      console.log(this.gps_listener);
 
       this.imu_listener = new ROSLIB.Topic({
         ros: this.ros,
         name: "/imu",
-        messageType: "imu/axes"
+        messageType: "fake_sensor_test/imu",
+        throttle_rate: this.THROTTLE_RATE,
+        queue_length: this.QUEUE_LENGTH
       });
 
       this.mobility_listener = new ROSLIB.Topic({
         ros: this.ros,
         name: "/mobility",
-        messageType: "fake_sensor_test/mobility"
+        messageType: "fake_sensor_test/mobility",
+        throttle_rate: this.THROTTLE_RATE,
+        queue_length: this.QUEUE_LENGTH
       });
 
       this.ultrasonic_listener = new ROSLIB.Topic({
         ros: this.ros,
         name: "/ultrasonic",
-        messageType: "fake_sensor_test/ultrasonic"
+        messageType: "fake_sensor_test/ultrasonic",
+        throttle_rate: this.THROTTLE_RATE,
+        queue_length: this.QUEUE_LENGTH
       });
     } catch (e) {
       //Fail to create ROS object
@@ -195,7 +261,10 @@ class App extends Component {
       <Container fluid={true} className="pt-2">
         <Row>
           <Col>
-            <IMU rotation={this.state.imu.rotation} />
+            <IMU
+              position={{ x: -40, y: -25, z: -35 }}
+              rotation={{ x: 0, y: 0, z: 0 }}
+            />
           </Col>
           <Col>
             <MapTile currentPosition={this.state.gps.currentPosition} />
@@ -214,7 +283,7 @@ class App extends Component {
         </Row>
         <Row className="mt-2">
           <Col>
-            <AntennaSignal decibals={this.state.antenna.decibals} />
+            <AntennaSignal decibels={this.state.antenna.decibels} />
           </Col>
         </Row>
         <Row className="mt-2">
