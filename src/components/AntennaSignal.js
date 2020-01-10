@@ -7,37 +7,16 @@ import { toast } from "react-toastify";
 DarkUnica(Highcharts);
 
 class AntennaSignal extends Component {
-  POOR_SIGNAL_ID = "poor-signal-id";
-
-  componentDidMount() {
-    setInterval(() => {
-      let prevData = this.state.chartOptions.series[0].data;
-
-      if (prevData.length > 5) {
-        prevData.shift();
+  componentWillReceiveProps() {
+    this.setState({
+      chartOptions: {
+        series: [
+          {
+            data: this.props.decibels
+          }
+        ]
       }
-      prevData.push([new Date().getTime(), Math.random() * 20]);
-      console.log(this.state.showToast);
-      if (
-        prevData[prevData.length - 1][1] < 5 &&
-        !toast.isActive(this.POOR_SIGNAL_ID)
-      ) {
-        toast.error("Signal Strength Critical!", {
-          position: toast.POSITION.BOTTOM_RIGHT,
-          toastId: this.POOR_SIGNAL_ID
-        });
-      }
-
-      this.setState({
-        chartOptions: {
-          series: [
-            {
-              data: [...prevData]
-            }
-          ]
-        }
-      });
-    }, 1000);
+    });
   }
 
   constructor(props) {
@@ -47,7 +26,7 @@ class AntennaSignal extends Component {
       count: 0,
       chartOptions: {
         chart: {
-          type: "spline"
+          type: "spline",
         },
 
         time: {
@@ -59,14 +38,15 @@ class AntennaSignal extends Component {
         },
 
         xAxis: {
-          type: "datetime"
+          type: "datetime",
+          visible: false
         },
 
         yAxis: {
           min: 0,
-          max: 20,
+          max: 60,
           title: {
-            text: "Value"
+            text: "Signal Strength"
           },
           plotLines: [
             {
